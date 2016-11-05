@@ -15,7 +15,7 @@
     "baseUrl": ".",
     "noEmitOnError": false,
     "rootDir": "./src",
-    "lib": ["es6", "dom"]
+    "lib": ["es5", "dom"]
   },
   "include": [
         "src/**/*"
