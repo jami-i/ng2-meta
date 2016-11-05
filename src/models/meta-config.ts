@@ -1,3 +1,9 @@
+
+export type AttributeMapping = {
+  filter: string | RegExp;
+  attribute: string;
+};
+
 export interface MetaConfig {
   /**
    * Flag to append an optional title suffix to the title.
@@ -19,4 +25,6 @@ export interface MetaConfig {
     titleSuffix?: string;
     [key: string]: string;
   };
+
+  attributeMappings?: AttributeMapping[];
 }
