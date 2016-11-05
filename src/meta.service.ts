@@ -11,7 +11,7 @@ const isDefined = (val: any) => typeof val !== 'undefined';
 
 @Injectable()
 export class MetaService {
-  constructor(private router: Router, @Inject(DOCUMENT) private document: any, private titleService: Title, private activatedRoute: ActivatedRoute, 
+  constructor(private router: Router, @Inject(DOCUMENT) private document: any, private titleService: Title, private activatedRoute: ActivatedRoute,
               @Inject(META_CONFIG) private metaConfig: MetaConfig) {
     this.router.events
       .filter(event => (event instanceof NavigationEnd))
@@ -21,11 +21,11 @@ export class MetaService {
       });
   }
 
-  private _getOrCreateMetaTag(name: string): HTMLElement {
-    let el: HTMLElement = this.document.querySelector(`meta[name='${name}']`);
+  private _getOrCreateMetaTag(attribute: string, name: string): HTMLElement {
+    let el: HTMLElement = this.document.querySelector(`meta[${attribute}='${name}']`);
     if (!el) {
       el = this.document.createElement('meta');
-      el.setAttribute('name', name);
+      el.setAttribute(attribute, name);
       this.document.head.appendChild(el);
     }
     return el;
@@ -43,20 +43,28 @@ export class MetaService {
       if (key === 'title' || key === 'titleSuffix') {
         return;
       }
-      this.setTag(key, meta[key]);
+      if (key === 'description') {
+        this.setTag('name', key, meta[key]);
+      } else {
+        this.setTag('property', key, meta[key]);
+      }
     });
 
     Object.keys(this.metaConfig.defaults).forEach(key => {
       if (key in meta || key === 'title' || key === 'titleSuffix') {
         return;
       }
-      this.setTag(key, this.metaConfig.defaults[key]);
+      if (key === 'description') {
+        this.setTag('name', key, this.metaConfig.defaults[key]);
+      } else {
+        this.setTag('property', key, this.metaConfig.defaults[key]);
+      }
     });
   }
 
   setTitle(title?: string, titleSuffix?: string): MetaService {
-    const titleElement = this._getOrCreateMetaTag('title');
-    const ogTitleElement = this._getOrCreateMetaTag('og:title');
+    const titleElement = this._getOrCreateMetaTag('name', 'title');
+    const ogTitleElement = this._getOrCreateMetaTag('property', 'og:title');
     let titleStr = isDefined(title) ? title : (this.metaConfig.defaults['title'] || '');
     if (this.metaConfig.useTitleSuffix) {
       titleStr += isDefined(titleSuffix) ? titleSuffix : (this.metaConfig.defaults['titleSuffix'] || '');
@@ -68,16 +76,16 @@ export class MetaService {
     return this;
   }
 
-  setTag(tag: string, value: string): MetaService {
+  setTag(attribute: string, tag: string, value: string): MetaService {
     if (tag === 'title' || tag === 'titleSuffix') {
       throw new Error(`Attempt to set ${tag} through 'setTag': 'title' and 'titleSuffix' are reserved tag names.
       Please use 'MetaService.setTitle' instead`);
     }
-    const tagElement = this._getOrCreateMetaTag(tag);
+    const tagElement = this._getOrCreateMetaTag(attribute, tag);
     let tagStr = isDefined(value) ? value : (this.metaConfig.defaults[tag] || '');
     tagElement.setAttribute('content', tagStr);
     if (tag === 'description') {
-      let ogDescElement = this._getOrCreateMetaTag('og:description');
+      let ogDescElement = this._getOrCreateMetaTag('name', 'og:description');
       ogDescElement.setAttribute('content', tagStr);
     }
     return this;
